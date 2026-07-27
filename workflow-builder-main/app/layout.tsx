@@ -32,12 +32,15 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex overflow-hidden h-screen">
+        <div className="flex flex-col md:flex-row overflow-hidden h-[100dvh] h-screen">
           <DrawerProvider>
             <ModalProvider>
               <Sidebar />
               <Toaster />
-              <div className="w-full h-full">{children}</div>
+              {/* pb for mobile bottom tab bar */}
+              <div className="w-full flex-1 min-h-0 min-w-0 pb-16 md:pb-0 overflow-hidden">
+                {children}
+              </div>
             </ModalProvider>
           </DrawerProvider>
         </div>

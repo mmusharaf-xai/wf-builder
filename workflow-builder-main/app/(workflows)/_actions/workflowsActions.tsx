@@ -1,195 +1,107 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { apiFetch } from "@/lib/api";
 import {
   GetWorkflowsParams,
   GetWorkflowsResponse,
   Workflow,
 } from "@/lib/types";
-import { Prisma } from "@prisma/client";
+import { fetchWorkflows, WORKFLOWS_PAGE_SIZE } from "@/lib/workflows-api";
+
+/**
+ * Workflow list/create/update/delete — backed by the Go API.
+ */
 
 export const onCreateWorkflow = async (name: string, description: string) => {
-  const user_id = "1";
-
-  if (user_id) {
-    //create new workflow
-    const workflow = await db.workflows.create({
-      data: {
-        user_id,
-        name,
-        description
-      },
+  try {
+    const response = await apiFetch("/api/workflows", {
+      method: "POST",
+      body: JSON.stringify({ name, description }),
+      cache: "no-store",
     });
-
-    if (workflow) return { message: "workflow created" };
-    return { message: "Oops! try again" };
+    const data = await response.json();
+    if (!response.ok || data?.error) {
+      return { message: data?.message || "Oops! try again", error: true as const };
+    }
+    return {
+      message: data?.message || "workflow created",
+      workflow: data?.workflow as Workflow | undefined,
+    };
+  } catch (error) {
+    console.error("Error creating workflow:", error);
+    return { message: "Oops! try again", error: true as const };
   }
 };
 
 export const onUpdateWorkflow = async (workflowData: Partial<Workflow>) => {
-  const user_id = "1"; // Replace with actual user authentication logic
-
-  if (!user_id) {
-    return { message: "Unauthorized" };
-  }
-
   if (!workflowData?.id) {
-    return { message: "Workflow ID is required for updating" };
+    return { message: "Workflow ID is required for updating", error: true as const };
   }
 
   try {
-    // Update existing workflow
-
-    delete workflowData?.is_deleted
-    const updatedWorkflow = await db.workflows.update({
-      where: { id: workflowData?.id },
-      data: {
-        ...workflowData,
-        updatedAt: new Date(),
-      },
+    const { id, is_deleted: _isDeleted, user_id: _userId, ...rest } = workflowData;
+    const response = await apiFetch(`/api/workflows/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(rest),
+      cache: "no-store",
     });
-
-    if (updatedWorkflow) {
+    const data = await response.json();
+    if (!response.ok || data?.error) {
       return {
-        message: "Workflow updated successfully",
-        workflow: updatedWorkflow,
+        message: data?.message || "Failed to update workflow",
+        error: true as const,
       };
-    } else {
-      return { message: "Workflow not found or update failed" };
     }
+    return {
+      message: data?.message || "Workflow updated successfully",
+      workflow: data?.workflow as Workflow | undefined,
+    };
   } catch (error) {
     console.error("Error updating workflow:", error);
     return {
       message: "Failed to update workflow",
-      error: (error as Record<string, string>).message,
+      error: true as const,
     };
   }
 };
 
-export const onDeleteWorkflow = async (workflowId:string) => {
-  const user_id = "1"; // Replace with actual user authentication logic
-
-  if (!user_id) {
-    return { message: "Unauthorized" };
-  }
-
+export const onDeleteWorkflow = async (workflowId: string) => {
   if (!workflowId) {
-    return { message: "Workflow ID is required for updating" };
+    return { message: "Workflow ID is required for updating", error: true as const };
   }
 
   try {
-    const updatedWorkflow = await db.workflows.update({
-      where: { id: workflowId },
-      data: {
-        is_deleted:true,
-        updatedAt: new Date(),
-      },
+    const response = await apiFetch(`/api/workflows/${workflowId}`, {
+      method: "DELETE",
+      cache: "no-store",
     });
-
-    if (updatedWorkflow) {
+    const data = await response.json();
+    if (!response.ok || data?.error) {
       return {
-        message: "Workflow Deleted successfully",
-        workflow: updatedWorkflow,
+        message: data?.message || "Failed to update workflow",
+        error: true as const,
       };
-    } else {
-      return { message: "Workflow not found or delete failed" };
     }
+    return {
+      message: data?.message || "Workflow Deleted successfully",
+      workflow: data?.workflow as Workflow | undefined,
+    };
   } catch (error) {
-    console.error("Error updating workflow:", error);
+    console.error("Error deleting workflow:", error);
     return {
       message: "Failed to update workflow",
-      error: (error as Record<string, string>).message,
+      error: true as const,
     };
   }
 };
 
-export const onGetWorkflows = async ({
-  page = 1,
-  limit = 10,
-  search = "",
-  sortOrder = "desc",
-}: GetWorkflowsParams = {}): Promise<GetWorkflowsResponse> => {
-  try {
-    const user_id = "1";
-    if (!user_id) {
-      return {
-        error: "Unauthorized",
-        workflows: [],
-        metadata: {
-          total: 0,
-          page: 0,
-          totalPages: 0,
-        },
-      };
-    }
-
-    // Validate and sanitize input parameters
-    const sanitizedLimit = Math.min(Math.max(1, limit), 100);
-    const sanitizedPage = Math.max(1, page);
-    const offset = (sanitizedPage - 1) * sanitizedLimit;
-
-    // Build the where clause with correct Prisma types
-    const whereClause: Prisma.workflowsWhereInput = {
-      user_id,
-      is_deleted: false,
-      ...(search
-        ? {
-            OR: [
-              {
-                name: {
-                  contains: search,
-                  mode: "insensitive",
-                },
-              },
-              {
-                description: {
-                  contains: search,
-                  mode: "insensitive",
-                },
-              },
-            ],
-          }
-        : {}),
-    };
-
-    // Get total count for pagination metadata
-    const total = await db.workflows.count({
-      where: whereClause,
-    });
-
-    // Get paginated and filtered results
-    const workflows = await db.workflows.findMany({
-      where: whereClause,
-      orderBy: {
-        id: sortOrder, // Using id for sorting since createdAt isn't available
-      },
-      take: sanitizedLimit,
-      skip: offset,
-    });
-
-    const totalPages = Math.ceil(total / sanitizedLimit);
-
-    return {
-      workflows,
-      metadata: {
-        total,
-        page: sanitizedPage,
-        totalPages,
-        hasNextPage: sanitizedPage < totalPages,
-        hasPreviousPage: sanitizedPage > 1,
-        limit: sanitizedLimit,
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching workflows:", error);
-    return {
-      error: "Failed to fetch workflows",
-      workflows: [],
-      metadata: {
-        total: 0,
-        page: 0,
-        totalPages: 0,
-      },
-    };
-  }
+export const onGetWorkflows = async (
+  params: GetWorkflowsParams = {}
+): Promise<GetWorkflowsResponse> => {
+  return fetchWorkflows({
+    page: 1,
+    limit: WORKFLOWS_PAGE_SIZE,
+    sortOrder: "desc",
+    ...params,
+  });
 };

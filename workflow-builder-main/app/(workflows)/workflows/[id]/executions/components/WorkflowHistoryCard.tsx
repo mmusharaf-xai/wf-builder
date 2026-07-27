@@ -51,11 +51,11 @@ export function WorkflowHistoryCard({
   return (
     <Link
       href={`/workflows/${item.workflowId}/executions?e_id=${item.id}`}
-      className="pt-1"
+      className="pt-1 block touch-manipulation"
     >
       <div
         className={cn(
-          "transition-colors duration-200 px-4 p-2 flex flex-col gap-2  rounded-lg shadow-none border-none",
+          "transition-colors duration-200 px-3 sm:px-4 py-2.5 sm:p-2 flex flex-col gap-2 rounded-lg shadow-none border-none active:scale-[0.99]",
           isActive ? "bg-secondary" : "bg-background",
           "hover:bg-secondary/80"
         )}

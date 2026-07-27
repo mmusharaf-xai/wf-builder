@@ -78,16 +78,20 @@ function NodeSections() {
   return (
     <Tabs
       defaultValue="parameters"
-      className="w-full p-2 overflow-auto flex relative flex-col h-full flex-1"
+      className="w-full p-2 overflow-hidden flex relative flex-col h-full min-h-0 flex-1"
     >
       <LoadingSpinner isLoading={state.loading} />
-      <TabsList className="w-fit mx-auto justify-start ">
-        <TabsTrigger value="parameters">Parameters</TabsTrigger>
-        <TabsTrigger value="settings">Settings</TabsTrigger>
+      <TabsList className="w-full sm:w-fit mx-auto justify-stretch sm:justify-start shrink-0 grid grid-cols-2 sm:inline-flex h-10">
+        <TabsTrigger value="parameters" className="touch-manipulation">
+          Parameters
+        </TabsTrigger>
+        <TabsTrigger value="settings" className="touch-manipulation">
+          Settings
+        </TabsTrigger>
       </TabsList>
       <TabsContent
         value="parameters"
-        className="w-full p-3 flex-1  overflow-auto"
+        className="w-full p-2 sm:p-3 flex-1 min-h-0 overflow-auto mt-2"
       >
         {state?.error ? (
           <div className="flex items-center justify-center h-full text-red-500 font-bold text-center">
@@ -97,7 +101,10 @@ function NodeSections() {
           ParamsView && <ParamsView />
         )}
       </TabsContent>
-      <TabsContent value="settings" className="w-full p-3 flex-1 overflow-auto">
+      <TabsContent
+        value="settings"
+        className="w-full p-2 sm:p-3 flex-1 min-h-0 overflow-auto mt-2"
+      >
         {state?.error ? (
           <div className="flex items-center justify-center h-full text-red-500 font-bold text-center">
             {state.error}

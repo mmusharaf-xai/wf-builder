@@ -1,6 +1,5 @@
 import { Workflow, WorkflowFormSchema } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,15 +26,15 @@ import {
   onUpdateWorkflow,
 } from "../_actions/workflowsActions";
 import { useModal } from "@/app/providers/modalProvider";
-
+import { notifyWorkflowsChanged } from "@/lib/workflows-api";
 
 type Props = {
   workflow?: Workflow;
+  onSuccess?: (workflow?: Workflow) => void;
 };
 
-const Workflowform = ({ workflow }: Props) => {
-  const {setClose}=useModal()
-
+const Workflowform = ({ workflow, onSuccess }: Props) => {
+  const { setClose } = useModal();
 
   const form = useForm<z.infer<typeof WorkflowFormSchema>>({
     mode: "onChange",
@@ -46,8 +45,7 @@ const Workflowform = ({ workflow }: Props) => {
     },
   });
 
-  const isLoading = form.formState.isLoading;
-  const router = useRouter();
+  const isLoading = form.formState.isSubmitting;
 
   const handleSubmit = async (values: z.infer<typeof WorkflowFormSchema>) => {
     if (workflow?.id) {
@@ -56,25 +54,28 @@ const Workflowform = ({ workflow }: Props) => {
         name: values.name,
         description: values.description,
       });
-      
-      if (response) {
+
+      if (response && !response.error) {
         toast.message(response.message);
-        router.refresh();
+        const updated = (response as { workflow?: Workflow }).workflow;
+        onSuccess?.(updated);
+        notifyWorkflowsChanged();
         setClose();
-      }else{
-        toast.error("Something Went Wrong")
+      } else {
+        toast.error(response?.message || "Something Went Wrong");
       }
-      
     } else {
       const response = await onCreateWorkflow(values.name, values.description);
-      if (response) {
+      if (response && !("error" in response && response.error)) {
         toast.message(response.message);
-        router.refresh();
+        onSuccess?.((response as { workflow?: Workflow }).workflow);
+        notifyWorkflowsChanged();
         setClose();
-      }else{
-        toast.error("Something Went Wrong")
+      } else {
+        toast.error(
+          (response as { message?: string })?.message || "Something Went Wrong"
+        );
       }
-      
     }
   };
 

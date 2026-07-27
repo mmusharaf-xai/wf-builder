@@ -1,6 +1,3 @@
-import { Suspense } from "react";
-
-import WorkflowGridSkeleton from "../components/WorkflowGridSkeleton";
 import WorkflowGrid from "../components/WorkflowGrid";
 import GlobalLayout from "@/components/globals/GlobalLayout";
 import WorkflowListingHeader from "../components/headers/workflowListingHeader";
@@ -10,10 +7,8 @@ export default function Home() {
     <>
       <WorkflowListingHeader />
       <GlobalLayout>
-        <main className="p-2 mx-auto">
-          <Suspense fallback={<WorkflowGridSkeleton />}>
-            <WorkflowGrid />
-          </Suspense>
+        <main className="w-full px-2 sm:px-4">
+          <WorkflowGrid />
         </main>
       </GlobalLayout>
     </>

@@ -24,6 +24,8 @@ type Props = {
   defaultOpen?: boolean;
   modal?: boolean;
   hideHeader?: boolean;
+  /** Hide the mobile footer Cancel button (when children already have one). */
+  hideFooter?: boolean;
 };
 
 export default function DrawerComponent({
@@ -32,6 +34,7 @@ export default function DrawerComponent({
   title,
   subheading,
   hideHeader = false,
+  hideFooter = false,
   modal = false,
 }: Props) {
   const { isOpen, setClose, isFullScreen } = useDrawer();
@@ -43,11 +46,12 @@ export default function DrawerComponent({
     if (isOpen) {
       handleClose();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
   useEffect(() => {
     window.requestAnimationFrame(() => {
-      document.body.style.pointerEvents = "auto"
+      document.body.style.pointerEvents = "auto";
     });
   }, [isOpen]);
 
@@ -61,11 +65,13 @@ export default function DrawerComponent({
         open={isOpen}
       >
         <VaulDrawer.Portal>
-          <VaulDrawer.Overlay className="fixed inset-0 bg-black/40" />
+          <VaulDrawer.Overlay className="fixed inset-0 bg-black/40 z-[998]" />
           <VaulDrawer.Content
             className={clsx(
               "fixed z-[999] outline-none flex transition-all duration-300",
-              isFullScreen ? "inset-2" : `right-2 top-2 bottom-2 w-[310px]`
+              isFullScreen
+                ? "inset-2"
+                : "right-2 top-2 bottom-2 w-[min(100vw-1rem,360px)] max-w-[360px]"
             )}
             style={
               !isFullScreen
@@ -75,25 +81,25 @@ export default function DrawerComponent({
                 : undefined
             }
           >
-            <div className="bg-zinc-50 h-full w-full grow p-5 flex overflow-auto flex-col rounded-[16px]">
+            <div className="bg-zinc-50 dark:bg-zinc-950 h-full w-full grow p-4 sm:p-5 flex overflow-hidden flex-col rounded-[16px]">
               <VaulDrawer.Title
                 hidden={hideHeader}
-                className="font-medium text-zinc-900"
+                className="font-medium text-zinc-900 dark:text-zinc-50 shrink-0"
               >
                 {title}
               </VaulDrawer.Title>
 
               <VaulDrawer.Description
                 hidden={hideHeader}
-                className="text-zinc-600"
+                className="text-zinc-600 dark:text-zinc-400 text-sm shrink-0"
               >
                 {subheading}
               </VaulDrawer.Description>
 
               <div
                 className={clsx(
-                  "flex-1 overflow-auto w-full h-full",
-                  !hideHeader && (title || subheading) ? "" : "-mt-2"
+                  "flex-1 min-h-0 overflow-auto w-full",
+                  !hideHeader && (title || subheading) ? "mt-2" : "-mt-2"
                 )}
               >
                 {children}
@@ -105,31 +111,55 @@ export default function DrawerComponent({
     );
   }
 
+  // Mobile: bottom sheet with capped height + scrollable body
   return (
     <Drawer open={isOpen} onClose={handleClose} defaultOpen={defaultOpen}>
-      <DrawerContent className={clsx(isFullScreen && "h-[95vh]")}>
+      <DrawerContent
+        className={clsx(
+          "max-h-[min(92dvh,92vh)] flex flex-col p-0",
+          isFullScreen && "h-[min(95dvh,95vh)] max-h-[min(95dvh,95vh)]"
+        )}
+      >
         {!hideHeader && (title || subheading) && (
-          <DrawerHeader className="text-left">
-            <div className="flex justify-between items-center">
-              <div>
-                {title && <DrawerTitle>{title}</DrawerTitle>}
+          <DrawerHeader className="text-left px-4 pt-2 pb-2 shrink-0 border-b">
+            <div className="flex justify-between items-start gap-2">
+              <div className="min-w-0">
+                {title && (
+                  <DrawerTitle className="text-base sm:text-lg truncate">
+                    {title}
+                  </DrawerTitle>
+                )}
                 {subheading && (
-                  <DrawerDescription>{subheading}</DrawerDescription>
+                  <DrawerDescription className="text-xs sm:text-sm line-clamp-2">
+                    {subheading}
+                  </DrawerDescription>
                 )}
               </div>
             </div>
           </DrawerHeader>
         )}
         <div
-          className={clsx(!hideHeader && (title || subheading) ? "" : "mt-4")}
+          className={clsx(
+            "flex-1 min-h-0 overflow-y-auto overscroll-contain px-4",
+            !hideHeader && (title || subheading) ? "py-3" : "mt-2 py-3",
+            // Leave room for bottom nav + footer
+            hideFooter ? "pb-20" : "pb-2"
+          )}
         >
           {children}
         </div>
-        <DrawerFooter className="pt-2">
-          <DrawerClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter>
+        {!hideFooter && (
+          <DrawerFooter
+            className="pt-2 pb-4 px-4 shrink-0 border-t"
+            style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
+          >
+            <DrawerClose asChild>
+              <Button variant="outline" className="w-full">
+                Cancel
+              </Button>
+            </DrawerClose>
+          </DrawerFooter>
+        )}
       </DrawerContent>
     </Drawer>
   );

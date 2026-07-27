@@ -1,4 +1,5 @@
 import { useWorkflowStore } from "@/app/store";
+import { apiFetch } from "@/lib/api";
 import { AllNodesDataI, AllNodesI } from "@/lib/types";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useMemo,  } from "react";
@@ -34,7 +35,7 @@ export const useNodesEditor = () => {
   const updateNodeParams = useCallback(
     async (payload: AllNodesDataI["parameters"]) => {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/workflows/${workflowDetails?.id}/updateNodeData`,
           {
             method: "PUT",
@@ -79,7 +80,7 @@ export const useNodesEditor = () => {
   const updateNodeSettings = useCallback(
     async (payload: Partial<AllNodesDataI["settings"]>) => {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/workflows/${workflowDetails?.id}/updateNodeData`,
           {
             method: "PUT",
@@ -164,7 +165,7 @@ export const useNodesEditor = () => {
   const onDeleteNode = useCallback(
     async (nodeId: string) => {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/workflows/${workflowDetails?.id}/deleteNode`,
           {
             method: "DELETE",

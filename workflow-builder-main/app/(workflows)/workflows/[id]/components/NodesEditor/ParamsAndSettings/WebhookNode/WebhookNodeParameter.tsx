@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { useNodesEditor } from "../../../../hooks";
 import { useDrawer } from "@/app/providers/drawerProvider";
 import { toast } from "sonner";
+import { apiUrl } from "@/lib/api";
 
 const methodOptions = ["GET", "POST"];
 const respondTypeOptions = [
@@ -76,8 +77,10 @@ const path=form.watch("path");
     [selectedNode, updateNodeParams]
   );
 
+const webhookUrl = apiUrl(`/api/webhooks/${path}`);
+
 const onCopy=()=>{
-  navigator.clipboard.writeText(`${window.location.origin}/api/webhooks/${path}`)
+  navigator.clipboard.writeText(webhookUrl)
   .then(() => {
     toast.success("Copied to clipboard")
   })
@@ -92,7 +95,7 @@ const onCopy=()=>{
         className="flex flex-col text-xs gap-2 h-full w-full"
       >
         <div className="flex flex-col gap-2 px-1 h-full w-full overflow-auto">
-          <p className="text-[10px] text-center text-gray-500 bg-gray-100 p-2 px-4 rounded-full cursor-copy" onClick={onCopy}>{window.location.origin}/webhooks/{path}</p>
+          <p className="text-[10px] text-center text-gray-500 bg-gray-100 p-2 px-4 rounded-full cursor-copy" onClick={onCopy}>{webhookUrl}</p>
           <FormField
             control={form.control}
             name="path"

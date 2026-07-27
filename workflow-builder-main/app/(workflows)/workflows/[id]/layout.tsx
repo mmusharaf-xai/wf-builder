@@ -5,6 +5,7 @@ import "@xyflow/react/dist/style.css";
 import { toast } from "sonner";
 
 import { useWorkflowStore } from "@/app/store";
+import { apiFetch } from "@/lib/api";
 
 import { useParams, useRouter } from "next/navigation";
 
@@ -29,7 +30,7 @@ function EditorPageLayout({ children }: { children: React.ReactNode }) {
         },
         nodesData: {},
       });
-      const response = await fetch(`/api/workflows/${id}`);
+      const response = await apiFetch(`/api/workflows/${id}`);
       const data = await response.json();
       if (response?.status === 404) {
         toast.error(data.message);

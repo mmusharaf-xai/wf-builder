@@ -7,7 +7,9 @@ type Props = {
 
 function GlobalLayout({ children ,className=''}: Props) {
   return (
-    <div className={`${className} border-l-[1px] p-4 border-t-[1px] pb-20 h-screen w-full rounded-l-3xl border-muted-foreground/20 overflow-auto`}>
+    <div
+      className={`${className} border-t md:border-l border-muted-foreground/20 p-3 sm:p-4 pb-24 md:pb-20 h-full min-h-0 w-full md:rounded-l-3xl overflow-auto`}
+    >
       {children}
     </div>
   );

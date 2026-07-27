@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { apiFetch } from "@/lib/api";
 import {  TNodeTypes } from "@/lib/types";
 import { z } from "zod";
 
@@ -61,15 +62,15 @@ export const CodeNodeSettingsSchema = z.object({
 export const  getNodeData = async ({workflowId, executionId, nodeId}: {workflowId: string, executionId: string, nodeId: string}) => {
   try {
     
-    let url = `/api/workflows/${workflowId}`;
+    let path = `/api/workflows/${workflowId}`;
     if (executionId) {
-      url = `${url}/executions/${executionId}/getNodeData?nodeId=${
+      path = `${path}/executions/${executionId}/getNodeData?nodeId=${
         nodeId || ""
       }`;
     } else {
-      url = `${url}/getNodeData?nodeId=${nodeId}`;
+      path = `${path}/getNodeData?nodeId=${nodeId}`;
     }
-    const response = await fetch(url);
+    const response = await apiFetch(path);
     const data = await response.json();
     
     if (data?.error === false) {

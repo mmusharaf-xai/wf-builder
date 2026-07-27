@@ -8,6 +8,7 @@ import { usePathname } from "next/navigation";
 import React, { useMemo, useState } from "react";
 
 import { toast } from "sonner";
+import { apiFetch } from "@/lib/api";
 
 const WorkflowDetailsHeader = () => {
   const pathname = usePathname();
@@ -19,13 +20,10 @@ const WorkflowDetailsHeader = () => {
   const onSave = async () => {
     try {
       setisSaving(true);
-      const response = await fetch(
+      const response = await apiFetch(
         `/api/workflows/${workflowDetails?.id}/updateNodeAndEdges`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             nodes: draftState.nodes,
             edges: draftState.edges,
@@ -55,35 +53,52 @@ const WorkflowDetailsHeader = () => {
     [pathname]
   );
   return (
-    <div className="flex flex-row gap-6 flex-wrap min-h-16 items-center px-6 py-4 w-full dark:bg-black ">
-      <div className="flex-1">
-        {!workflowDetails?.name&&loading ? (
+    <div className="flex flex-col sm:flex-row gap-3 sm:gap-6 min-h-14 sm:min-h-16 items-stretch sm:items-center px-3 sm:px-6 py-3 sm:py-4 w-full dark:bg-black">
+      <div className="flex items-center justify-between gap-2 sm:flex-1 min-w-0">
+        {!workflowDetails?.name && loading ? (
           <Skeleton className="w-full max-w-[15rem] h-8" />
         ) : (
           <h1
-            className="font-semibold text-lg max-w-[20rem] truncate"
+            className="font-semibold text-base sm:text-lg max-w-[70vw] sm:max-w-[20rem] truncate"
             title={workflowDetails?.name || ""}
           >
             {workflowDetails?.name || "Something went wrong"}
           </h1>
         )}
+        <div className="sm:hidden shrink-0">
+          {isExecugtionPage ? null : loading || isSaving ? (
+            <Skeleton className="w-14 h-8" />
+          ) : showSave ? (
+            <Button size={"sm"} onClick={onSave}>
+              Save
+            </Button>
+          ) : null}
+        </div>
       </div>
-      <div className="flex-1 flex justify-center items-center">
+      <div className="flex justify-center items-center sm:flex-1">
         <Tabs
           defaultValue="account"
           value={isExecugtionPage ? "executions" : "editor"}
+          className="w-full sm:w-auto"
         >
-          <TabsList>
-            <Link href={`/workflows/${workflowDetails?.id}`}>
-              <TabsTrigger value="editor">Editor</TabsTrigger>
+          <TabsList className="w-full sm:w-auto">
+            <Link href={`/workflows/${workflowDetails?.id}`} className="flex-1 sm:flex-initial">
+              <TabsTrigger value="editor" className="w-full">
+                Editor
+              </TabsTrigger>
             </Link>
-            <Link href={`/workflows/${workflowDetails?.id}/executions`}>
-              <TabsTrigger value="executions">Executions</TabsTrigger>
+            <Link
+              href={`/workflows/${workflowDetails?.id}/executions`}
+              className="flex-1 sm:flex-initial"
+            >
+              <TabsTrigger value="executions" className="w-full">
+                Executions
+              </TabsTrigger>
             </Link>
           </TabsList>
         </Tabs>
       </div>
-      <div className="flex flex-1 items-center min-w-[5rem] gap-2 justify-end">
+      <div className="hidden sm:flex flex-1 items-center min-w-[5rem] gap-2 justify-end">
         {isExecugtionPage ? null : loading || isSaving ? (
           <Skeleton className="w-full max-w-[5rem] h-8" />
         ) : showSave ? (
